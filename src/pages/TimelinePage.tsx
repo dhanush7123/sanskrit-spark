@@ -14,7 +14,9 @@ interface TimelineEvent {
   image: string;
 }
 
-const IMAGE_BASE = `${import.meta.env.BASE_URL}images/`;
+// Use correct image base for local dev and GitHub Pages
+const IMAGE_BASE =
+  import.meta.env.DEV ? "/images/" : "/sanskrit-spark/images/";
 
 const timelineEvents: TimelineEvent[] = [
   {
