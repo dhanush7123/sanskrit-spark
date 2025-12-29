@@ -125,22 +125,6 @@ const QuizPage = () => {
   const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([]); // Start with empty leaderboard
   const [isGuest, setIsGuest] = useState(false);
 
-  useEffect(() => {
-    if (!isAuthenticated && !isGuest) {
-      // Allow guest mode, no toast needed
-    }
-  }, [isAuthenticated, isGuest]);
-
-  useEffect(() => {
-    let timer: NodeJS.Timeout;
-    if (gameState === 'playing' && timeLeft > 0 && !showExplanation) {
-      timer = setTimeout(() => setTimeLeft(timeLeft - 1), 1000);
-    } else if (timeLeft === 0 && !showExplanation) {
-      handleAnswer(-1);
-    }
-    return () => clearTimeout(timer);
-  }, [timeLeft, gameState, showExplanation, handleAnswer]);
-
   const startQuiz = () => {
     setGameState('playing');
     setCurrentQuestion(0);
@@ -149,24 +133,45 @@ const QuizPage = () => {
     setTimeLeft(30);
   };
 
-  const handleAnswer = (answerIndex: number) => {
-    if (selectedAnswer !== null) return;
-    
-    setSelectedAnswer(answerIndex);
-    const isCorrect = answerIndex === quizQuestions[currentQuestion].correctAnswer;
-    setAnswers([...answers, isCorrect]);
-    
-    if (isCorrect) {
-      const timeBonus = Math.floor(timeLeft / 3);
-      const points = 10 + timeBonus;
-      setScore(score + points);
-      if (isAuthenticated && !isGuest) {
-        addKarmaPoints(points);
+  const handleAnswer = useCallback(
+    (answerIndex: number) => {
+      if (selectedAnswer !== null) return;
+
+      setSelectedAnswer(answerIndex);
+      const isCorrect = answerIndex === quizQuestions[currentQuestion].correctAnswer;
+      setAnswers((prev) => [...prev, isCorrect]);
+
+      if (isCorrect) {
+        const timeBonus = Math.floor(timeLeft / 3);
+        const points = 10 + timeBonus;
+        setScore((prev) => prev + points);
+        if (isAuthenticated && !isGuest) {
+          addKarmaPoints(points);
+        }
       }
+
+      setShowExplanation(true);
+    },
+    [selectedAnswer, currentQuestion, timeLeft, isAuthenticated, isGuest, addKarmaPoints]
+  );
+
+  useEffect(() => {
+    if (!isAuthenticated && !isGuest) {
+      // Allow guest mode, no toast needed
     }
-    
-    setShowExplanation(true);
-  };
+  }, [isAuthenticated, isGuest]);
+
+  useEffect(() => {
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    if (gameState === 'playing' && timeLeft > 0 && !showExplanation) {
+      timer = setTimeout(() => setTimeLeft((prev) => prev - 1), 1000);
+    } else if (timeLeft === 0 && !showExplanation) {
+      handleAnswer(-1);
+    }
+    return () => {
+      if (timer) clearTimeout(timer);
+    };
+  }, [timeLeft, gameState, showExplanation, handleAnswer]);
 
   const nextQuestion = () => {
     if (currentQuestion < quizQuestions.length - 1) {
