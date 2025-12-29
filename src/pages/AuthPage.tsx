@@ -88,10 +88,10 @@ const AuthPage = () => {
         description: "Confirmation email has been resent. Please check your inbox.",
         variant: "default",
       });
-    } catch (error: any) {
+    } catch (error: unknown) {
       toast({
         title: "Error",
-        description: error.message || "Failed to resend confirmation email.",
+        description: (error as Error)?.message || "Failed to resend confirmation email.",
         variant: "destructive",
       });
     } finally {
@@ -165,10 +165,10 @@ const AuthPage = () => {
           }
         }
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       toast({
         title: "Error",
-        description: error.message || "Something went wrong. Please try again.",
+        description: (error as Error)?.message || "Something went wrong. Please try again.",
         variant: "destructive",
       });
     } finally {
@@ -204,7 +204,7 @@ const AuthPage = () => {
 
       console.log('OAuth initiated:', data);
 
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('OAuth Exception:', error);
       toast({
         title: "Connection Error",

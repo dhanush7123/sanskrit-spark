@@ -25,7 +25,7 @@ const ExplorePage = () => {
 
       if (error) throw error;
       setResult(data.result);
-    } catch (error: any) {
+    } catch (error: unknown) {
       toast({
         title: "Saraswati is meditating...",
         description: "Please try again in a moment.",

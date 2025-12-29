@@ -139,7 +139,7 @@ const QuizPage = () => {
       handleAnswer(-1);
     }
     return () => clearTimeout(timer);
-  }, [timeLeft, gameState, showExplanation]);
+  }, [timeLeft, gameState, showExplanation, handleAnswer]);
 
   const startQuiz = () => {
     setGameState('playing');
