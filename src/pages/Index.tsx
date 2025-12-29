@@ -28,7 +28,7 @@ const features = [
   },
   {
     icon: Sparkles,
-    title: 'The Oracle',
+    title: 'Saraswati',
     description: 'AI-powered Sanskrit word explorer',
     path: '/explore',
   },
@@ -106,7 +106,7 @@ const Index = () => {
                   size="lg"
                   className="font-mukta text-lg px-8 py-6 gold-border"
                 >
-                  Explore The Oracle
+                  Explore Saraswati
                 </Button>
               </Link>
             </motion.div>

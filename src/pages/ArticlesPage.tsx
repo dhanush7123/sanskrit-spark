@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Navbar } from '@/components/layout/Navbar';
 import { FloatingSanskrit } from '@/components/ui/FloatingSanskrit';
@@ -12,6 +13,11 @@ const articles = [
 
 const ArticlesPage = () => {
   const [showSanskrit, setShowSanskrit] = useState(true);
+  const navigate = useNavigate();
+
+  const handleArticleClick = (articleId: number) => {
+    navigate(`/articles/${articleId}`);
+  };
 
   return (
     <div className="min-h-screen vedic-gradient relative">
@@ -42,13 +48,21 @@ const ArticlesPage = () => {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: i * 0.1 }}
-                className="talapatra-card p-8"
+                className="talapatra-card p-8 cursor-pointer hover:scale-[1.02] transition-transform duration-200"
+                onClick={() => handleArticleClick(article.id)}
               >
                 <div className="relative z-10">
-                  <h3 className="font-cinzel text-xl text-secondary mb-4">{article.title}</h3>
-                  <p className={`font-mukta text-foreground leading-relaxed ${showSanskrit ? 'text-xl' : ''}`}>
+                  <h3 className="font-cinzel text-xl text-secondary mb-4 hover:text-primary transition-colors">
+                    {article.title}
+                  </h3>
+                  <p className={`font-mukta text-foreground leading-relaxed mb-4 ${
+                    showSanskrit ? 'text-lg' : 'text-base'
+                  }`}>
                     {showSanskrit ? article.sanskrit : article.english}
                   </p>
+                  <div className="text-sm font-mukta text-primary hover:underline">
+                    Read full story →
+                  </div>
                 </div>
               </motion.div>
             ))}

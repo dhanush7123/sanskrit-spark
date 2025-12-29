@@ -1,13 +1,11 @@
 import { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useStore } from '@/store/useStore';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { SparkParticles } from '@/components/ui/SparkParticles';
-import { FloatingSanskrit } from '@/components/ui/FloatingSanskrit';
 import { toast } from '@/hooks/use-toast';
 import { Mail, Lock, User, ArrowLeft, Eye, EyeOff } from 'lucide-react';
 
@@ -19,12 +17,14 @@ const AuthPage = () => {
   const [mode, setMode] = useState<AuthMode>('login');
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [resendLoading, setResendLoading] = useState(false);
   const [formData, setFormData] = useState({
     email: '',
     password: '',
     name: '',
   });
 
+  // Simple redirect for authenticated users
   useEffect(() => {
     if (isAuthenticated) {
       navigate('/');
@@ -32,51 +32,70 @@ const AuthPage = () => {
   }, [isAuthenticated, navigate]);
 
   useEffect(() => {
+    console.log('AuthPage: Setting up auth state listener');
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
+        console.log('AuthPage: Auth state changed:', event, !!session?.user);
         if (session?.user) {
+          console.log('AuthPage: User authenticated, setting user data');
           setUser({
             id: session.user.id,
             email: session.user.email || '',
             name: session.user.user_metadata?.name || session.user.email?.split('@')[0] || 'Seeker',
             karma_points: 0,
           });
-          
-          // Play temple bell sound
-          playBellSound();
-          
+
           toast({
             title: "Welcome, Seeker! 🙏",
             description: "Your journey through Sanskrit begins now.",
           });
+
+          console.log('AuthPage: Redirecting to home after auth');
           navigate('/');
+        } else {
+          console.log('AuthPage: No user session');
         }
       }
     );
 
-    return () => subscription.unsubscribe();
+    return () => {
+      console.log('AuthPage: Cleaning up auth listener');
+      subscription.unsubscribe();
+    };
   }, [setUser, navigate]);
 
-  const playBellSound = () => {
-    // Create a simple bell-like sound using Web Audio API
+  const resendConfirmationEmail = async () => {
+    if (!formData.email) {
+      toast({
+        title: "Email Required",
+        description: "Please enter your email address first.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setResendLoading(true);
     try {
-      const audioContext = new AudioContext();
-      const oscillator = audioContext.createOscillator();
-      const gainNode = audioContext.createGain();
-      
-      oscillator.connect(gainNode);
-      gainNode.connect(audioContext.destination);
-      
-      oscillator.frequency.setValueAtTime(528, audioContext.currentTime);
-      oscillator.type = 'sine';
-      
-      gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
-      gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 1);
-      
-      oscillator.start(audioContext.currentTime);
-      oscillator.stop(audioContext.currentTime + 1);
-    } catch (e) {
-      // Ignore audio errors
+      const { error } = await supabase.auth.resend({
+        type: 'signup',
+        email: formData.email,
+      });
+
+      if (error) throw error;
+
+      toast({
+        title: "Email Sent! 📧",
+        description: "Confirmation email has been resent. Please check your inbox.",
+        variant: "default",
+      });
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to resend confirmation email.",
+        variant: "destructive",
+      });
+    } finally {
+      setResendLoading(false);
     }
   };
 
@@ -86,7 +105,7 @@ const AuthPage = () => {
 
     try {
       if (mode === 'signup') {
-        const { error } = await supabase.auth.signUp({
+        const { data, error } = await supabase.auth.signUp({
           email: formData.email,
           password: formData.password,
           options: {
@@ -105,8 +124,22 @@ const AuthPage = () => {
               variant: "destructive",
             });
           } else {
+            console.error('Signup error:', error);
             throw error;
           }
+        } else if (data.user && !data.user.email_confirmed_at) {
+          toast({
+            title: "Account Created! 📧",
+            description: "Please check your email and click the confirmation link to activate your account.",
+            variant: "default",
+          });
+        } else if (data.user) {
+          toast({
+            title: "Welcome to Sanskrit Spark! 🙏",
+            description: "Your journey through Sanskrit begins now.",
+            variant: "default",
+          });
+          navigate('/');
         }
       } else {
         const { error } = await supabase.auth.signInWithPassword({
@@ -117,8 +150,14 @@ const AuthPage = () => {
         if (error) {
           if (error.message.includes('Invalid login credentials')) {
             toast({
-              title: "Invalid Credentials",
-              description: "Please check your email and password.",
+              title: "Login Failed",
+              description: "Please check your email and password, or confirm your email if you just signed up.",
+              variant: "destructive",
+            });
+          } else if (error.message.includes('Email not confirmed')) {
+            toast({
+              title: "Email Not Confirmed",
+              description: "Please check your email and click the confirmation link before logging in.",
               variant: "destructive",
             });
           } else {
@@ -137,37 +176,65 @@ const AuthPage = () => {
     }
   };
 
-  const handleOAuthSignIn = async (provider: 'google') => {
+  const handleOAuthSignIn = async (provider: 'google' | 'facebook' | 'twitter') => {
     try {
-      const { error } = await supabase.auth.signInWithOAuth({
+      setLoading(true);
+
+      const { data, error } = await supabase.auth.signInWithOAuth({
         provider,
         options: {
           redirectTo: `${window.location.origin}/`,
+          queryParams: {
+            access_type: 'offline',
+            prompt: 'consent',
+          },
         },
       });
-      if (error) throw error;
+
+      if (error) {
+        console.error('OAuth Error:', error);
+        const providerName = provider === 'google' ? 'Google' : provider === 'facebook' ? 'Facebook' : 'X (Twitter)';
+        toast({
+          title: `${providerName} Login Not Configured`,
+          description: `${providerName} OAuth is not set up in Supabase. Please contact the administrator.`,
+          variant: "destructive",
+        });
+        return;
+      }
+
+      console.log('OAuth initiated:', data);
+
     } catch (error: any) {
+      console.error('OAuth Exception:', error);
       toast({
-        title: "Error",
-        description: error.message || "OAuth sign in failed.",
+        title: "Connection Error",
+        description: "Unable to connect to authentication service. Please try again.",
         variant: "destructive",
       });
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen vedic-gradient relative overflow-hidden flex items-center justify-center px-4">
-      <SparkParticles />
-      <FloatingSanskrit count={10} />
-
+    <div className="min-h-screen bg-gradient-to-br from-orange-50 to-red-50 flex items-center justify-center px-4">
       <motion.button
         onClick={() => navigate('/')}
-        className="absolute top-6 left-6 z-50 flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors"
+        className="absolute top-6 left-6 z-50 flex items-center gap-2 text-gray-600 hover:text-gray-900 transition-colors"
         whileHover={{ x: -5 }}
       >
         <ArrowLeft className="w-5 h-5" />
-        <span className="font-mukta">Back</span>
+        <span>Back</span>
       </motion.button>
+
+      {loading && (
+        <div className="absolute inset-0 flex items-center justify-center bg-black/20 z-50">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+            <p className="text-gray-900">Loading...</p>
+          </div>
+        </div>
+      )}
 
       <motion.div
         initial={{ opacity: 0, scale: 0.9 }}
@@ -175,114 +242,113 @@ const AuthPage = () => {
         transition={{ duration: 0.5 }}
         className="w-full max-w-md z-20"
       >
-        <div className="talapatra-card p-8">
-          <div className="relative z-10">
-            <motion.div
-              initial={{ opacity: 0, y: -20 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="text-center mb-8"
-            >
-              <h1 className="text-3xl font-cinzel font-bold text-foreground mb-2">
-                {mode === 'login' ? 'Welcome Back' : 'Join the Gurukul'}
-              </h1>
-              <p className="font-mukta text-muted-foreground">
-                {mode === 'login'
-                  ? 'Continue your journey of wisdom'
-                  : 'Begin your path to Sanskrit mastery'}
-              </p>
-            </motion.div>
+        <div className="bg-white rounded-lg shadow-lg p-8">
+          <div className="text-center mb-8">
+            <h1 className="text-3xl font-bold text-gray-900 mb-2">
+              {mode === 'login' ? 'Welcome Back' : 'Join the Journey'}
+            </h1>
+            <p className="text-gray-600">
+              {mode === 'login' ? 'Continue your Sanskrit exploration' : 'Begin your path to wisdom'}
+            </p>
+          </div>
 
-            <form onSubmit={handleSubmit} className="space-y-5">
-              <AnimatePresence mode="wait">
-                {mode === 'signup' && (
-                  <motion.div
-                    key="name"
-                    initial={{ opacity: 0, height: 0 }}
-                    animate={{ opacity: 1, height: 'auto' }}
-                    exit={{ opacity: 0, height: 0 }}
-                  >
-                    <Label htmlFor="name" className="font-mukta text-foreground">
-                      Your Name
-                    </Label>
-                    <div className="relative mt-1">
-                      <User className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
-                      <Input
-                        id="name"
-                        type="text"
-                        placeholder="Enter your name"
-                        value={formData.name}
-                        onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                        className="pl-10 bg-background/50 border-border focus:border-primary"
-                        required={mode === 'signup'}
-                      />
-                    </div>
-                  </motion.div>
-                )}
-              </AnimatePresence>
-
+          <form onSubmit={handleSubmit} className="space-y-6">
+            {mode === 'signup' && (
               <div>
-                <Label htmlFor="email" className="font-mukta text-foreground">
-                  Email Address
+                <Label htmlFor="name" className="text-gray-900">
+                  Your Name
                 </Label>
                 <div className="relative mt-1">
-                  <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+                  <User className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
                   <Input
-                    id="email"
-                    type="email"
-                    placeholder="your@email.com"
-                    value={formData.email}
-                    onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                    className="pl-10 bg-background/50 border-border focus:border-primary"
-                    required
+                    id="name"
+                    type="text"
+                    placeholder="Enter your name"
+                    value={formData.name}
+                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                    className="pl-10"
+                    required={mode === 'signup'}
                   />
                 </div>
               </div>
+            )}
 
-              <div>
-                <Label htmlFor="password" className="font-mukta text-foreground">
-                  Password
-                </Label>
-                <div className="relative mt-1">
-                  <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
-                  <Input
-                    id="password"
-                    type={showPassword ? 'text' : 'password'}
-                    placeholder="••••••••"
-                    value={formData.password}
-                    onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                    className="pl-10 pr-10 bg-background/50 border-border focus:border-primary"
-                    required
-                    minLength={6}
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-                  >
-                    {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
-                  </button>
-                </div>
+            <div>
+              <Label htmlFor="email" className="text-gray-900">
+                Email Address
+              </Label>
+              <div className="relative mt-1">
+                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                <Input
+                  id="email"
+                  type="email"
+                  placeholder="your@email.com"
+                  value={formData.email}
+                  onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                  className="pl-10"
+                  required
+                />
               </div>
+            </div>
 
-              <Button
-                type="submit"
-                disabled={loading}
-                className="w-full font-mukta text-lg py-6 saffron-glow"
-              >
-                {loading ? 'Please wait...' : mode === 'login' ? 'Enter the Gurukul' : 'Begin Journey'}
-              </Button>
-            </form>
-
-            <div className="my-6 flex items-center gap-4">
-              <div className="flex-1 h-px bg-border" />
-              <span className="text-sm font-mukta text-muted-foreground">or continue with</span>
-              <div className="flex-1 h-px bg-border" />
+            <div>
+              <Label htmlFor="password" className="text-gray-900">
+                Password
+              </Label>
+              <div className="relative mt-1">
+                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                <Input
+                  id="password"
+                  type={showPassword ? 'text' : 'password'}
+                  placeholder="••••••••"
+                  value={formData.password}
+                  onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                  className="pl-10 pr-10"
+                  required
+                  minLength={6}
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                >
+                  {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                </button>
+              </div>
             </div>
 
             <Button
+              type="submit"
+              disabled={loading}
+              className="w-full py-3 bg-blue-600 hover:bg-blue-700 text-white"
+            >
+              {loading ? 'Please wait...' : mode === 'login' ? 'Sign In' : 'Sign Up'}
+            </Button>
+
+            {mode === 'login' && (
+              <Button
+                type="button"
+                variant="ghost"
+                onClick={resendConfirmationEmail}
+                disabled={resendLoading || !formData.email}
+                className="w-full text-sm text-gray-500 hover:text-blue-600"
+              >
+                {resendLoading ? 'Sending...' : 'Resend confirmation email'}
+              </Button>
+            )}
+          </form>
+
+          <div className="my-6 flex items-center gap-4">
+            <div className="flex-1 h-px bg-gray-300" />
+            <span className="text-sm text-gray-500">or continue with</span>
+            <div className="flex-1 h-px bg-gray-300" />
+          </div>
+
+          <div className="space-y-3">
+            <Button
               variant="outline"
               onClick={() => handleOAuthSignIn('google')}
-              className="w-full font-mukta gold-border"
+              className="w-full"
             >
               <svg className="w-5 h-5 mr-2" viewBox="0 0 24 24">
                 <path
@@ -305,17 +371,45 @@ const AuthPage = () => {
               Continue with Google
             </Button>
 
-            <p className="text-center mt-6 font-mukta text-muted-foreground">
-              {mode === 'login' ? "New to the path? " : "Already a seeker? "}
-              <button
-                type="button"
-                onClick={() => setMode(mode === 'login' ? 'signup' : 'login')}
-                className="text-primary hover:underline font-semibold"
-              >
-                {mode === 'login' ? 'Join here' : 'Login here'}
-              </button>
-            </p>
+            <Button
+              variant="outline"
+              onClick={() => handleOAuthSignIn('facebook')}
+              className="w-full"
+            >
+              <svg className="w-5 h-5 mr-2" viewBox="0 0 24 24">
+                <path
+                  fill="currentColor"
+                  d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"
+                />
+              </svg>
+              Continue with Facebook
+            </Button>
+
+            <Button
+              variant="outline"
+              onClick={() => handleOAuthSignIn('twitter')}
+              className="w-full"
+            >
+              <svg className="w-5 h-5 mr-2" viewBox="0 0 24 24">
+                <path
+                  fill="currentColor"
+                  d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"
+                />
+              </svg>
+              Continue with X
+            </Button>
           </div>
+
+          <p className="text-center mt-6 text-gray-600">
+            {mode === 'login' ? "New to the path? " : "Already a seeker? "}
+            <button
+              type="button"
+              onClick={() => setMode(mode === 'login' ? 'signup' : 'login')}
+              className="text-blue-600 hover:underline font-semibold"
+            >
+              {mode === 'login' ? 'Join here' : 'Login here'}
+            </button>
+          </p>
         </div>
       </motion.div>
     </div>

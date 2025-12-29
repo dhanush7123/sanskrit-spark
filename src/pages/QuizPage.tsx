@@ -122,16 +122,14 @@ const QuizPage = () => {
   const [score, setScore] = useState(0);
   const [timeLeft, setTimeLeft] = useState(30);
   const [answers, setAnswers] = useState<boolean[]>([]);
-  const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>(mockLeaderboard);
+  const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([]); // Start with empty leaderboard
+  const [isGuest, setIsGuest] = useState(false);
 
   useEffect(() => {
-    if (!isAuthenticated) {
-      toast({
-        title: "Login Required",
-        description: "Please enter the Gurukul to participate in the Quiz Arena.",
-      });
+    if (!isAuthenticated && !isGuest) {
+      // Allow guest mode, no toast needed
     }
-  }, [isAuthenticated]);
+  }, [isAuthenticated, isGuest]);
 
   useEffect(() => {
     let timer: NodeJS.Timeout;
@@ -162,7 +160,9 @@ const QuizPage = () => {
       const timeBonus = Math.floor(timeLeft / 3);
       const points = 10 + timeBonus;
       setScore(score + points);
-      addKarmaPoints(points);
+      if (isAuthenticated && !isGuest) {
+        addKarmaPoints(points);
+      }
     }
     
     setShowExplanation(true);
@@ -181,6 +181,8 @@ const QuizPage = () => {
   };
 
   const updateLeaderboard = () => {
+    if (!isAuthenticated || isGuest) return; // Only update leaderboard for authenticated users
+    
     const userName = user?.name || 'Seeker';
     const newEntry: LeaderboardEntry = {
       rank: 0,
@@ -260,13 +262,27 @@ const QuizPage = () => {
                     <ArrowRight className="ml-2 w-5 h-5" />
                   </Button>
                 ) : (
-                  <Button
-                    onClick={() => navigate('/auth')}
-                    size="lg"
-                    className="font-mukta text-lg px-10 py-6"
-                  >
-                    Login to Play
-                  </Button>
+                  <div className="flex flex-col sm:flex-row gap-4 justify-center">
+                    <Button
+                      onClick={() => navigate('/auth')}
+                      size="lg"
+                      className="font-mukta text-lg px-10 py-6 saffron-glow"
+                    >
+                      Login to Play
+                      <ArrowRight className="ml-2 w-5 h-5" />
+                    </Button>
+                    <Button
+                      onClick={() => {
+                        setIsGuest(true);
+                        startQuiz();
+                      }}
+                      variant="outline"
+                      size="lg"
+                      className="font-mukta text-lg px-10 py-6"
+                    >
+                      Play as Guest
+                    </Button>
+                  </div>
                 )}
 
                 {/* Leaderboard */}
@@ -275,26 +291,40 @@ const QuizPage = () => {
                     कीर्ति स्तम्भ — Pillar of Victory
                   </h2>
                   <div className="talapatra-card p-6 max-w-md mx-auto">
-                    <div className="relative z-10 space-y-3">
-                      {leaderboard.map((entry) => (
-                        <div
-                          key={entry.rank}
-                          className={`flex items-center justify-between p-3 rounded-lg ${
-                            entry.rank <= 3 ? 'bg-primary/10' : 'bg-background/30'
-                          }`}
-                        >
-                          <div className="flex items-center gap-3">
-                            {getRankIcon(entry.rank)}
-                            <span className="font-mukta text-foreground">{entry.name}</span>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <Flame className="w-4 h-4 text-primary" />
-                            <span className="font-mukta font-semibold text-secondary">
-                              {entry.score}
-                            </span>
-                          </div>
+                    <div className="relative z-10">
+                      {leaderboard.length === 0 ? (
+                        <div className="text-center py-8">
+                          <div className="text-4xl mb-4">🏆</div>
+                          <p className="font-mukta text-muted-foreground">
+                            No seekers have taken the challenge yet.
+                          </p>
+                          <p className="font-mukta text-sm text-muted-foreground mt-2">
+                            Be the first to earn karma points!
+                          </p>
                         </div>
-                      ))}
+                      ) : (
+                        <div className="space-y-3">
+                          {leaderboard.map((entry) => (
+                            <div
+                              key={entry.rank}
+                              className={`flex items-center justify-between p-3 rounded-lg ${
+                                entry.rank <= 3 ? 'bg-primary/10' : 'bg-background/30'
+                              }`}
+                            >
+                              <div className="flex items-center gap-3">
+                                {getRankIcon(entry.rank)}
+                                <span className="font-mukta text-foreground">{entry.name}</span>
+                              </div>
+                              <div className="flex items-center gap-2">
+                                <Flame className="w-4 h-4 text-primary" />
+                                <span className="font-mukta font-semibold text-secondary">
+                                  {entry.score}
+                                </span>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -442,7 +472,9 @@ const QuizPage = () => {
                     <p className="text-4xl font-cinzel font-bold text-foreground mb-2">
                       {score}
                     </p>
-                    <p className="font-mukta text-secondary mb-6">Karma Points Earned</p>
+                    <p className="font-mukta text-secondary mb-6">
+                      {isAuthenticated && !isGuest ? 'Karma Points Earned' : 'Points Scored'}
+                    </p>
                     
                     <div className="flex justify-center gap-4 mb-6">
                       {answers.map((correct, i) => (
@@ -477,6 +509,14 @@ const QuizPage = () => {
                   >
                     Return Home
                   </Button>
+                  {isGuest && (
+                    <Button
+                      onClick={() => navigate('/auth')}
+                      className="font-mukta"
+                    >
+                      Login to Save Progress
+                    </Button>
+                  )}
                 </div>
               </motion.div>
             )}

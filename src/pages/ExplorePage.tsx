@@ -27,7 +27,7 @@ const ExplorePage = () => {
       setResult(data.result);
     } catch (error: any) {
       toast({
-        title: "The Oracle is meditating...",
+        title: "Saraswati is meditating...",
         description: "Please try again in a moment.",
         variant: "destructive",
       });
@@ -52,7 +52,7 @@ const ExplorePage = () => {
         <div className="container mx-auto max-w-3xl">
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="text-center mb-12">
             <Sparkles className="w-12 h-12 text-primary mx-auto mb-4" />
-            <h1 className="text-4xl md:text-5xl font-cinzel font-bold text-foreground mb-4">The Oracle</h1>
+            <h1 className="text-4xl md:text-5xl font-cinzel font-bold text-foreground mb-4">Saraswati</h1>
             <p className="font-mukta text-muted-foreground">Enter any word to discover its Sanskrit essence</p>
           </motion.div>
 
@@ -75,7 +75,7 @@ const ExplorePage = () => {
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="talapatra-card p-8">
               <div className="relative z-10">
                 <div className="flex justify-between items-start mb-4">
-                  <h3 className="font-cinzel text-xl text-secondary">Oracle's Wisdom</h3>
+                  <h3 className="font-cinzel text-xl text-secondary">Saraswati's Wisdom</h3>
                   <Button variant="ghost" size="icon" onClick={speakResult}>
                     <Volume2 className="w-5 h-5" />
                   </Button>

@@ -10,7 +10,7 @@ const navLinks = [
   { path: '/', label: 'Home' },
   { path: '/timeline', label: 'Timeline' },
   { path: '/quiz', label: 'Quiz Arena' },
-  { path: '/explore', label: 'The Oracle' },
+  { path: '/explore', label: 'Saraswati' },
   { path: '/articles', label: 'Articles' },
 ];
 

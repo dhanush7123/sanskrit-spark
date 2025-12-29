@@ -11,6 +11,7 @@ interface TimelineEvent {
   period: string;
   description: string;
   significance: string;
+  image: string;
 }
 
 const timelineEvents: TimelineEvent[] = [
@@ -22,6 +23,7 @@ const timelineEvents: TimelineEvent[] = [
     period: '1500 - 500 BCE',
     description: 'Sanskrit emerges as the language of the Vedas, the oldest scriptures of Hinduism. The Rigveda, composed in this period, contains over 10,000 verses.',
     significance: 'Foundation of Indo-European linguistics and spiritual literature.',
+    image: '/images/vedic-era.png',
   },
   {
     id: 2,
@@ -31,6 +33,7 @@ const timelineEvents: TimelineEvent[] = [
     period: '6th - 4th Century BCE',
     description: 'Panini creates the Ashtadhyayi, containing 3,959 sutras that define Sanskrit grammar with mathematical precision.',
     significance: 'First formal grammar in human history, influencing modern linguistics.',
+    image: '/images/panini-grammar.png',
   },
   {
     id: 3,
@@ -40,6 +43,7 @@ const timelineEvents: TimelineEvent[] = [
     period: '4th - 5th Century CE',
     description: 'Kalidasa writes masterpieces like Shakuntala and Meghaduta. Sanskrit reaches its artistic zenith.',
     significance: 'Peak of Sanskrit poetry, drama, and artistic expression.',
+    image: '/images/kalidasa-age.png',
   },
   {
     id: 4,
@@ -49,6 +53,7 @@ const timelineEvents: TimelineEvent[] = [
     period: '8th - 12th Century CE',
     description: 'Scholars like Adi Shankaracharya compose profound philosophical texts in Sanskrit, establishing Advaita Vedanta.',
     significance: 'Development of complex philosophical systems and commentaries.',
+    image: '/images/philosophical-flourishing.png',
   },
   {
     id: 5,
@@ -58,6 +63,7 @@ const timelineEvents: TimelineEvent[] = [
     period: '19th Century - Present',
     description: 'Western scholars discover Sanskrit\'s connection to European languages. Digital preservation and AI translation efforts emerge.',
     significance: 'Global recognition and technological preservation of ancient wisdom.',
+    image: '/images/sanskrit-renaissance.png',
   },
 ];
 
@@ -78,6 +84,48 @@ const TimelineNode = ({
       transition={{ duration: 0.6, delay: 0.2 }}
       className={`flex items-center gap-8 mb-20 ${isLeft ? 'flex-row' : 'flex-row-reverse'}`}
     >
+      {/* Image Section */}
+      <motion.div
+        className="flex-1"
+        initial={{ opacity: 0, scale: 0.8, x: isLeft ? -50 : 50 }}
+        whileInView={{ opacity: 1, scale: 1, x: 0 }}
+        viewport={{ once: true, margin: "-100px" }}
+        transition={{ duration: 0.8, delay: 0.4 }}
+      >
+        <div className="relative overflow-hidden rounded-2xl shadow-2xl group">
+          <motion.img
+            src={event.image}
+            alt={event.title}
+            className="w-full h-64 md:h-80 object-cover transition-transform duration-700 group-hover:scale-110"
+            whileHover={{ scale: 1.05 }}
+            transition={{ type: 'spring', stiffness: 300 }}
+          />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+          <motion.div
+            className="absolute bottom-4 left-4 right-4 text-white"
+            initial={{ y: 20, opacity: 0 }}
+            whileInView={{ y: 0, opacity: 1 }}
+            transition={{ delay: 0.6 }}
+          >
+            <h4 className="font-cinzel text-lg font-semibold mb-1">{event.era}</h4>
+            <p className="font-mukta text-sm opacity-90">{event.period}</p>
+          </motion.div>
+        </div>
+      </motion.div>
+
+      {/* Center Node */}
+      <div className="relative z-20 flex-shrink-0">
+        <motion.div
+          className="w-8 h-8 rounded-full bg-primary border-4 border-card flex items-center justify-center saffron-glow"
+          initial={{ scale: 0 }}
+          whileInView={{ scale: 1 }}
+          viewport={{ once: true }}
+          transition={{ delay: 0.4, type: 'spring' }}
+        >
+          <span className="text-xs font-bold text-primary-foreground">{index + 1}</span>
+        </motion.div>
+      </div>
+
       {/* Card */}
       <div className="flex-1">
         <motion.div
@@ -110,22 +158,6 @@ const TimelineNode = ({
           </div>
         </motion.div>
       </div>
-
-      {/* Center Node */}
-      <div className="relative z-20 flex-shrink-0">
-        <motion.div
-          className="w-8 h-8 rounded-full bg-primary border-4 border-card flex items-center justify-center saffron-glow"
-          initial={{ scale: 0 }}
-          whileInView={{ scale: 1 }}
-          viewport={{ once: true }}
-          transition={{ delay: 0.4, type: 'spring' }}
-        >
-          <span className="text-xs font-bold text-primary-foreground">{index + 1}</span>
-        </motion.div>
-      </div>
-
-      {/* Empty space for alternating */}
-      <div className="flex-1 hidden md:block" />
     </motion.div>
   );
 };
