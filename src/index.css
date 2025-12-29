@@ -1,96 +1,98 @@
+@import url('https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@400;700;900&family=Mukta:wght@300;400;500;600;700&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-/* Definition of the design system. All colors, gradients, fonts, etc should be defined here. 
-All colors MUST be HSL.
-*/
-
 @layer base {
   :root {
-    --background: 0 0% 100%;
-    --foreground: 222.2 84% 4.9%;
+    /* Sacred Vedic Color Palette */
+    --background: 43 87% 94%; /* Vedic Parchment #FDF6E3 */
+    --foreground: 17 35% 12%; /* Iron-Gall Ink #2C1810 */
 
-    --card: 0 0% 100%;
-    --card-foreground: 222.2 84% 4.9%;
+    --card: 39 45% 80%; /* Palm Leaf #EAD8B1 */
+    --card-foreground: 17 35% 12%;
 
-    --popover: 0 0% 100%;
-    --popover-foreground: 222.2 84% 4.9%;
+    --popover: 43 87% 94%;
+    --popover-foreground: 17 35% 12%;
 
-    --primary: 222.2 47.4% 11.2%;
-    --primary-foreground: 210 40% 98%;
+    --primary: 27 100% 60%; /* Sacred Saffron #FF9933 */
+    --primary-foreground: 17 35% 12%;
 
-    --secondary: 210 40% 96.1%;
-    --secondary-foreground: 222.2 47.4% 11.2%;
+    --secondary: 43 56% 52%; /* Temple Gold #D4AF37 */
+    --secondary-foreground: 17 35% 12%;
 
-    --muted: 210 40% 96.1%;
-    --muted-foreground: 215.4 16.3% 46.9%;
+    --muted: 39 30% 85%;
+    --muted-foreground: 17 20% 35%;
 
-    --accent: 210 40% 96.1%;
-    --accent-foreground: 222.2 47.4% 11.2%;
+    --accent: 27 100% 60%;
+    --accent-foreground: 17 35% 12%;
 
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 210 40% 98%;
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 98%;
 
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
-    --ring: 222.2 84% 4.9%;
+    --border: 39 40% 70%;
+    --input: 39 40% 75%;
+    --ring: 27 100% 60%;
 
-    --radius: 0.5rem;
+    --radius: 0.75rem;
 
-    --sidebar-background: 0 0% 98%;
+    /* Custom Vedic Variables */
+    --saffron: 27 100% 60%;
+    --gold: 43 56% 52%;
+    --parchment-light: 43 87% 94%;
+    --parchment-dark: 33 45% 89%;
+    --palm-leaf: 39 45% 80%;
+    --ink: 17 35% 12%;
+    --spark: 35 100% 65%;
 
-    --sidebar-foreground: 240 5.3% 26.1%;
-
-    --sidebar-primary: 240 5.9% 10%;
-
-    --sidebar-primary-foreground: 0 0% 98%;
-
-    --sidebar-accent: 240 4.8% 95.9%;
-
-    --sidebar-accent-foreground: 240 5.9% 10%;
-
-    --sidebar-border: 220 13% 91%;
-
-    --sidebar-ring: 217.2 91.2% 59.8%;
+    --sidebar-background: 39 45% 80%;
+    --sidebar-foreground: 17 35% 12%;
+    --sidebar-primary: 27 100% 60%;
+    --sidebar-primary-foreground: 17 35% 12%;
+    --sidebar-accent: 43 56% 52%;
+    --sidebar-accent-foreground: 17 35% 12%;
+    --sidebar-border: 39 40% 70%;
+    --sidebar-ring: 27 100% 60%;
   }
 
   .dark {
-    --background: 222.2 84% 4.9%;
-    --foreground: 210 40% 98%;
+    --background: 17 35% 8%;
+    --foreground: 43 87% 94%;
 
-    --card: 222.2 84% 4.9%;
-    --card-foreground: 210 40% 98%;
+    --card: 17 30% 12%;
+    --card-foreground: 43 87% 94%;
 
-    --popover: 222.2 84% 4.9%;
-    --popover-foreground: 210 40% 98%;
+    --popover: 17 35% 8%;
+    --popover-foreground: 43 87% 94%;
 
-    --primary: 210 40% 98%;
-    --primary-foreground: 222.2 47.4% 11.2%;
+    --primary: 27 100% 60%;
+    --primary-foreground: 17 35% 12%;
 
-    --secondary: 217.2 32.6% 17.5%;
-    --secondary-foreground: 210 40% 98%;
+    --secondary: 43 56% 45%;
+    --secondary-foreground: 43 87% 94%;
 
-    --muted: 217.2 32.6% 17.5%;
-    --muted-foreground: 215 20.2% 65.1%;
+    --muted: 17 25% 18%;
+    --muted-foreground: 39 30% 65%;
 
-    --accent: 217.2 32.6% 17.5%;
-    --accent-foreground: 210 40% 98%;
+    --accent: 27 100% 55%;
+    --accent-foreground: 17 35% 12%;
 
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 210 40% 98%;
+    --destructive: 0 62% 30%;
+    --destructive-foreground: 0 0% 98%;
 
-    --border: 217.2 32.6% 17.5%;
-    --input: 217.2 32.6% 17.5%;
-    --ring: 212.7 26.8% 83.9%;
-    --sidebar-background: 240 5.9% 10%;
-    --sidebar-foreground: 240 4.8% 95.9%;
-    --sidebar-primary: 224.3 76.3% 48%;
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 240 3.7% 15.9%;
-    --sidebar-accent-foreground: 240 4.8% 95.9%;
-    --sidebar-border: 240 3.7% 15.9%;
-    --sidebar-ring: 217.2 91.2% 59.8%;
+    --border: 17 25% 22%;
+    --input: 17 25% 22%;
+    --ring: 27 100% 60%;
+
+    --sidebar-background: 17 30% 10%;
+    --sidebar-foreground: 43 87% 94%;
+    --sidebar-primary: 27 100% 60%;
+    --sidebar-primary-foreground: 17 35% 12%;
+    --sidebar-accent: 43 56% 45%;
+    --sidebar-accent-foreground: 43 87% 94%;
+    --sidebar-border: 17 25% 22%;
+    --sidebar-ring: 27 100% 60%;
   }
 }
 
@@ -101,5 +103,116 @@ All colors MUST be HSL.
 
   body {
     @apply bg-background text-foreground;
+    font-family: 'Mukta', sans-serif;
   }
+
+  h1, h2, h3, h4, h5, h6 {
+    font-family: 'Cinzel Decorative', serif;
+  }
+}
+
+@layer components {
+  .talapatra-card {
+    @apply relative overflow-hidden;
+    background: linear-gradient(135deg, hsl(var(--palm-leaf)) 0%, hsl(var(--parchment-dark)) 100%);
+    clip-path: polygon(2% 5%, 98% 2%, 100% 95%, 3% 98%);
+    box-shadow: 
+      inset 0 2px 4px hsla(var(--ink), 0.1),
+      0 4px 20px hsla(var(--ink), 0.15);
+  }
+
+  .talapatra-card::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+    opacity: 0.05;
+    pointer-events: none;
+  }
+
+  .vedic-gradient {
+    background: linear-gradient(180deg, hsl(var(--parchment-light)) 0%, hsl(var(--parchment-dark)) 100%);
+  }
+
+  .saffron-glow {
+    box-shadow: 0 0 30px hsla(var(--saffron), 0.4), 0 0 60px hsla(var(--saffron), 0.2);
+  }
+
+  .gold-border {
+    border: 2px solid hsl(var(--gold));
+    box-shadow: inset 0 0 10px hsla(var(--gold), 0.2);
+  }
+
+  .floating-sanskrit {
+    @apply absolute pointer-events-none select-none;
+    font-family: 'Cinzel Decorative', serif;
+    color: hsla(var(--gold), 0.15);
+    font-size: 3rem;
+    animation: float 8s ease-in-out infinite;
+  }
+
+  .spark-particle {
+    @apply absolute rounded-full;
+    background: radial-gradient(circle, hsl(var(--spark)) 0%, hsla(var(--saffron), 0) 70%);
+  }
+}
+
+@layer utilities {
+  .text-shadow-vedic {
+    text-shadow: 2px 2px 4px hsla(var(--ink), 0.3);
+  }
+
+  .animate-float {
+    animation: float 6s ease-in-out infinite;
+  }
+
+  .animate-spark-rise {
+    animation: sparkRise 4s ease-out infinite;
+  }
+
+  .animate-draw-line {
+    animation: drawLine 2s ease-out forwards;
+  }
+}
+
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0) rotate(0deg);
+  }
+  50% {
+    transform: translateY(-20px) rotate(3deg);
+  }
+}
+
+@keyframes sparkRise {
+  0% {
+    transform: translateY(0) scale(1);
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(-100vh) scale(0.5);
+    opacity: 0;
+  }
+}
+
+@keyframes drawLine {
+  from {
+    stroke-dashoffset: 1000;
+  }
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+@keyframes pulse-glow {
+  0%, 100% {
+    box-shadow: 0 0 20px hsla(var(--saffron), 0.4);
+  }
+  50% {
+    box-shadow: 0 0 40px hsla(var(--saffron), 0.6);
+  }
+}
+
+.animate-pulse-glow {
+  animation: pulse-glow 2s ease-in-out infinite;
 }
